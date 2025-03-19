@@ -24,24 +24,27 @@ class DataGenerator {
         }
     
     private:
-        static std::random_device rd;
-        static std::mt19937 gen;
+        template <typename T>
+        struct type {};
+        
+        template <typename T>
+        T my_rand() {
+            return my_rand(type<T> {});
+        }
 
         template <typename T>
-        static T my_rand() {
+        T my_rand(type<T>) {
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
             static std::uniform_real_distribution<T> dis(-1.0, 1.0);
             return dis(gen);
         }
 
         template <typename T>
-        static std::complex<T> my_rand() {
+        std::complex<T> my_rand(type<std::complex<T>>) {
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
             static std::uniform_real_distribution<T> dis(-1.0, 1.0);
-            return {dis(gen), dis(gen)};
+            return std::complex<T>(dis(gen), dis(gen));
         }
 };
-
-template <typename VALUE_T>
-std::random_device DataGenerator<VALUE_T>::rd;
-
-template <typename VALUE_T>
-std::mt19937 DataGenerator<VALUE_T>::gen(DataGenerator<VALUE_T>::rd());
