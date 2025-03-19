@@ -1,0 +1,12 @@
+[submodule "eigen-test"]
+	path = eigen-test
+	url = git@github.com:Investigating-Eigen-s-FFT-Module/eigen-gitlab.git
+[submodule "cmake/findFFTW"]
+	path = cmake/findFFTW
+	url = https://github.com/egpbos/findFFTW.git
+[submodule "include/ext/pocketfft"]
+	path = include/ext/pocketfft
+	url = https://github.com/hayguen/pocketfft.git
+[submodule "eigen-official"]
+	path = eigen-official
+	url = https://gitlab.com/libeigen/eigen.git
