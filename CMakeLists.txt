@@ -48,6 +48,7 @@ target_include_directories(UNITTEST_BASE INTERFACE
     Boost::boost
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/include/ext"
+    "${CMAKE_SOURCE_DIR}/include/ext/pocketfft"
 )
 
 # Executables
@@ -64,8 +65,6 @@ if(UNITTEST_BUILD_POCKETFFT)
         EIGEN_POCKETFFT_DEFAULT
     )
     target_link_libraries(unittest_pocketfftd UNITTEST_BASE)
-    target_include_directories(unittest_pocketfftd PUBLIC
-        "${CMAKE_SOURCE_DIR}/include/ext/pocketfft")
 endif()
 
 if(UNITTEST_BUILD_FFTW)
