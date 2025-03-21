@@ -142,6 +142,7 @@ static const flag_t InPlace = 32;
 static const flag_t UseVectors = 64;
 
 // TODO: IMPLEMENT MATRIX TEMPLATE FLAGS
+// TODO: ADD FLAG FOR nfft ARGUMENT
 template <typename SCALAR_T, flag_t FFT_FLAGS=Default, flag_t MATRIX_FLAGS=Default, flag_t TEST_FLAGS=Default> 
 class FFTTest {
     public:
@@ -164,6 +165,8 @@ class FFTTest {
             for (const auto& [rows, cols] : sizes) {
                 if constexpr (hasFlag(UseVectors, TEST_FLAGS)) {
                     BOOST_TEST_CONTEXT("Vector size: " << rows << get_flags_context()) {
+                        std::stringstream output_log;
+                        
                         // input generation
                         if constexpr (hasFlag(Real, TEST_FLAGS)) {
                             Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, 1);
@@ -172,19 +175,37 @@ class FFTTest {
                                 auto& [x, y] = coords(i, 0);
                                 input_real_v(i, 0) = f(x, y);
                             }
+                            
+                            if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                                input_real_v.normalize();
+                            }
+
+                            output_log << "Input real vector [first 5 elements]:" << std::endl;
+                            for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
+                                output_log << "  " << i << ": " << input_real_v(i) << std::endl;
+                            }
                         }
                         else {
                             input_complex_v = complex_gen.generateCoordinateMatrix(rows, 1);
                             input_complex_v.unaryExpr(f);
+
+                            if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                                input_complex_v.normalize();
+                            }
+                            
+                            output_log << "Input complex vector [first 5 elements]:" << std::endl;
+                            for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
+                                output_log << "  " << i << ": " << input_complex_v(i).real() << " + " << input_complex_v(i).imag() << "i" << std::endl;
+                            }
                         }
 
                         // Frequency vector
                         if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
                             if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
-                                freq = Eigen::VectorX<complex_t>(rows/2 + 1); // TODO: InPlace also needs padding.
+                                freq_v = Eigen::VectorX<complex_t>(rows/2 + 1); // TODO: InPlace also needs padding.
                             }
                             else {
-                                freq = Eigen::VectorX<complex_t>(rows);
+                                freq_v = Eigen::VectorX<complex_t>(rows);
                             }
 
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
@@ -197,23 +218,39 @@ class FFTTest {
 
                         if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
                             // TODO
-                            BOOST_TEST_MESSAGE("InPlace is currently not supported yet.");
+                            output_log << "InPlace is currently not supported yet." << std::endl;
+                            BOOST_TEST_MESSAGE(output_log.str());
                             return;
                         }
 
                         // Actual round trip
                         if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                                BOOST_TEST_MESSAGE("c2r using unary operator is currently not supported yet.");
+                                output_log << "c2r using unary operator is currently not supported yet." << std::endl;
+                                BOOST_TEST_MESSAGE(output_log.str());
                                 return;
-                                // freq = fft.fwd(input_real);
-                                // output_real = fft.inv(freq);
-                                // BOOST_CHECK_MESSAGE(input_real.isApprox(output_real, get_tolerance<SCALAR_T>()),
-                                //                     "FFT->IFFT roundtrip failed");
                             }
                             else {
                                 freq_v = fft.fwd(input_complex_v);
+                                output_log << "FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+                                
                                 output_complex_v = fft.inv(freq_v);
+                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                                    output_complex_v.normalize();
+                                }
+                                
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (input_complex_v - output_complex_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
                                 BOOST_CHECK_MESSAGE(input_complex_v.isApprox(output_complex_v, get_tolerance<SCALAR_T>()),
                                                 "FFT->IFFT roundtrip failed");
                             }
@@ -221,13 +258,49 @@ class FFTTest {
                         else {
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
                                 fft.fwd(freq_v, input_real_v);
+                                output_log << "FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+                                
                                 fft.inv(output_real_v, freq_v);
+                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                                    output_real_v.normalize();
+                                }
+
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_real_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_real_v(i) << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (input_real_v - output_real_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
                                 BOOST_CHECK_MESSAGE(input_real_v.isApprox(output_real_v, get_tolerance<SCALAR_T>()),
                                                 "FFT->IFFT roundtrip failed");
                             }
                             else {
                                 fft.fwd(freq_v, input_complex_v);
+                                output_log << "FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+                                
                                 fft.inv(output_complex_v, freq_v);
+                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                                    output_complex_v.normalize();
+                                }
+
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (input_complex_v - output_complex_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
                                 BOOST_CHECK_MESSAGE(input_complex_v.isApprox(output_complex_v, get_tolerance<SCALAR_T>()),
                                                 "FFT->IFFT roundtrip failed");
                             }
@@ -370,33 +443,231 @@ auto sin2d(T x, T y) {
     return std::sin(x) + std::sin(y);
 }
 
+// TODO: improve API here, no need for rand to sit in DataGenerator anymore...
+// in fact, only one method in DataGenerator is needed now.
+template <typename T>
+auto random(T, T) {
+    return DataGenerator<T>::template rand<T>();
+}
+
+template <typename T>
+auto random(std::complex<T>) {
+    return DataGenerator<std::complex<T>>::template rand<std::complex<T>>();
+}
+
 namespace utf = boost::unit_test;
 
 // Main test suite
 BOOST_AUTO_TEST_SUITE(EigenFFTTests)
 
-// Macro to create test cases with different flag combinations
+// Macro to create test cases with deterministic test functions
 #define TEST_FFT_CONFIG_RT_FUNC(scalar_type, fft_flags, test_flags, test_name, sizes_func) \
-        FFTTest<scalar_type, fft_flags, Default, test_flags> tester; \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> tester_##test_name; \
         BOOST_AUTO_TEST_CASE(test_name##_sin, *utf::description("Testing Roundtrip FFT with " #scalar_type " and sin signal")) { \
             if constexpr (hasFlag(Real, test_flags)) { \
-                tester.test_roundtrip_func(TestDimensions::sizes_func(), sin2d<scalar_type>); \
+                tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), sin2d<scalar_type>); \
             } else { \
-                tester.test_roundtrip_func(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
+                tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
             } \
         } \
         BOOST_AUTO_TEST_CASE(test_name##_const, *utf::description("Testing Roundtrip FFT with " #scalar_type " and const signal")) { \
             if constexpr (hasFlag(Real, test_flags)) { \
-                tester.test_roundtrip_func(TestDimensions::sizes_func(), real_const<scalar_type>); \
+                tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), real_const<scalar_type>); \
             } else { \
-                tester.test_roundtrip_func(TestDimensions::sizes_func(), complex_const<scalar_type>); \
+                tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), complex_const<scalar_type>); \
             } \
         }
 
+// Macro for random test functions that run multiple iterations
+#define TEST_FFT_CONFIG_RT_FUNC_RANDOM(scalar_type, fft_flags, test_flags, test_name, sizes_func, iterations) \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> random_tester_##test_name; \
+        BOOST_AUTO_TEST_CASE(test_name##_random, *utf::description("Testing Roundtrip FFT with " #scalar_type " and random signal")) { \
+            for (int iter = 0; iter < iterations; ++iter) { \
+                BOOST_TEST_CONTEXT("Random iteration " << iter + 1 << " of " << iterations) { \
+                    if constexpr (hasFlag(Real, test_flags)) { \
+                        random_tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), \
+                            [](scalar_type x, scalar_type y) { return random(x, y); }); \
+                    } else { \
+                        random_tester_##test_name.test_roundtrip_func(TestDimensions::sizes_func(), \
+                            [](std::complex<scalar_type> z) { return random(z); }); \
+                    } \
+                } \
+            } \
+        }
 
-// Test all combinations of flags for vectors of float precision
+// Group 1: Float Complex-to-Complex Vector Tests
+BOOST_AUTO_TEST_SUITE(FloatComplexToComplexVectorTests)
 
-// Clean up macro
+// Basic tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, 5)
+
+// Unary FFT function tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes, 3)
+
+// Preallocate tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, 3)
+
+// Keep plans tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 2: Float Complex-to-Complex with FFT flags
+BOOST_AUTO_TEST_SUITE(FloatComplexToComplexFFTFlagsTests)
+
+// Unscaled FFT tests
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, 3)
+
+// Half-spectrum tests
+TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, 3)
+
+// Combined flags tests
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Default | UseVectors, float_c2c_unscaled_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Default | UseVectors, float_c2c_unscaled_halfspectrum, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 3: Float Real-to-Complex Vector Tests
+BOOST_AUTO_TEST_SUITE(FloatRealToComplexVectorTests)
+
+// Basic real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, 5)
+
+// Unary FFT real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes, 3)
+
+// Preallocate real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, 3)
+
+// Keep plans real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 4: Float Real-to-Complex with FFT flags
+BOOST_AUTO_TEST_SUITE(FloatRealToComplexFFTFlagsTests)
+
+// Unscaled real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, 3)
+
+// Half-spectrum real tests
+TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, 3)
+
+// Combined flags real tests
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Real | UseVectors, float_r2c_unscaled_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Real | UseVectors, float_r2c_unscaled_halfspectrum, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 5: Double Complex-to-Complex Vector Tests
+BOOST_AUTO_TEST_SUITE(DoubleComplexToComplexVectorTests)
+
+// Basic tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, 5)
+
+// Unary FFT function tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes, 3)
+
+// Preallocate tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes, 3)
+
+// Keep plans tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 6: Double Complex-to-Complex with FFT flags
+BOOST_AUTO_TEST_SUITE(DoubleComplexToComplexFFTFlagsTests)
+
+// Unscaled FFT tests
+TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes, 3)
+
+// Half-spectrum tests
+TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes, 3)
+
+// Combined flags tests
+TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Default | UseVectors, double_c2c_unscaled_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Default | UseVectors, double_c2c_unscaled_halfspectrum, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 7: Double Real-to-Complex Vector Tests
+BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorTests)
+
+// Basic real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, 5)
+
+// Unary FFT real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, 3)
+
+// Preallocate real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, 3)
+
+// Keep plans real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 8: Double Real-to-Complex with FFT flags
+BOOST_AUTO_TEST_SUITE(DoubleRealToComplexFFTFlagsTests)
+
+// Unscaled real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, 3)
+
+// Half-spectrum real tests
+TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, 3)
+
+// Combined flags real tests
+TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Group 9: Comprehensive Tests with Full Matrix Sizes
+BOOST_AUTO_TEST_SUITE(ComprehensiveVectorTests)
+
+// Float comprehensive tests
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, 3)
+
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, 3)
+
+// Double comprehensive tests
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, 3)
+
+TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, 3)
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Clean up macros
 #undef TEST_FFT_CONFIG_RT_FUNC
+#undef TEST_FFT_CONFIG_RT_FUNC_RANDOM
 
 BOOST_AUTO_TEST_SUITE_END() // EigenFFTTests

@@ -41,17 +41,17 @@ class DataGenerator {
         }
         
         template <typename T>
-        T rand() {
+        static T rand() {
             return rand(type<T> {});
         }
-        
+
     private:
         template <typename T>
         struct type {};
         
 
         template <typename T>
-        T rand(type<T>) {
+        static T rand(type<T>) {
             static std::random_device rd;
             static std::mt19937 gen(rd());
             static std::uniform_real_distribution<T> dis(-1.0, 1.0);
@@ -59,7 +59,7 @@ class DataGenerator {
         }
 
         template <typename T>
-        std::complex<T> rand(type<std::complex<T>>) {
+        static std::complex<T> rand(type<std::complex<T>>) {
             static std::random_device rd;
             static std::mt19937 gen(rd());
             static std::uniform_real_distribution<T> dis(-1.0, 1.0);
