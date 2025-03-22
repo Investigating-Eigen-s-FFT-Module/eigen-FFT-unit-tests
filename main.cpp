@@ -989,7 +989,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, UnaryFFT | UseVectors, float_c2
 BOOST_AUTO_TEST_SUITE_END()
 
 // Preallocate configuration tests
-BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate"))
+BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate")  *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
@@ -998,8 +998,17 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_pr
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(preallocate_unary, *utf::label("preallocate") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Preallocate | UnaryFFT | UseVectors, float_c2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Preallocate | UnaryFFT | UseVectors, float_c2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Preallocate | UnaryFFT | UseVectors, float_c2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Preallocate | UnaryFFT| UseVectors, float_c2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Preallocate | UnaryFFT| UseVectors, float_c2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Preallocate | UnaryFFT| UseVectors, float_c2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Keep plans configuration tests
-BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans"))
+BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
@@ -1008,11 +1017,20 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keep
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(keepplans_unary, *utf::label("keepplans") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, KeepPlans | UnaryFFT | UseVectors, float_c2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // FFT flags tests
 BOOST_AUTO_TEST_SUITE(FFTFlags, *utf::label("fftflags"))
 
 // Unscaled flag tests
-BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled"))
+BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
@@ -1021,8 +1039,17 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unsca
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(unscaled_unary, *utf::label("unscaled") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Default | UnaryFFT | UseVectors, float_c2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Half-spectrum flag tests
-BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum"))
+BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
@@ -1031,10 +1058,24 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_h
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(halfspectrum_unary, *utf::label("halfspectrum") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Combined flags tests
-BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined"))
+BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Default | UseVectors, float_c2c_unscaled_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Default | UseVectors, float_c2c_unscaled_halfspectrum, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(combined_unary, *utf::label("combined") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_unscaled_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Default | UnaryFFT | UseVectors, float_c2c_unscaled_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END() // FFTFlags
@@ -1065,7 +1106,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | UnaryFFT | UseVectors, f
 BOOST_AUTO_TEST_SUITE_END()
 
 // Preallocate configuration tests
-BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate"))
+BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
@@ -1074,8 +1115,17 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | Preallocate | UseVectors, float
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(preallocate_unary, *utf::label("preallocate") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | Preallocate | UnaryFFT | UseVectors, float_r2c_prealloc_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Keep plans configuration tests
-BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans"))
+BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
@@ -1084,11 +1134,20 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(keepplans_unary, *utf::label("keepplans") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | KeepPlans | UnaryFFT | UseVectors, float_r2c_keepplans_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // FFT flags tests
 BOOST_AUTO_TEST_SUITE(FFTFlags, *utf::label("fftflags"))
 
 // Unscaled flag tests
-BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled"))
+BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
@@ -1097,8 +1156,17 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(unscaled_unary, *utf::label("unscaled") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Real | UnaryFFT | UseVectors, float_r2c_unscaled_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Half-spectrum flag tests
-BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum"))
+BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
@@ -1107,10 +1175,24 @@ TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_half
 TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(halfspectrum_unary, *utf::label("halfspectrum") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
 // Combined flags tests
-BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined"))
+BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Real | UseVectors, float_r2c_unscaled_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Real | UseVectors, float_r2c_unscaled_halfspectrum, getSimpleSizes, RAND_RUNS)
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(combined_unary, *utf::label("combined") *utf::label("unary"))
+TEST_FFT_CONFIG_RT_FUNC(float, Unscaled | HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_unscaled_halfspectrum_unary, getSimpleSizes)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Real | UnaryFFT | UseVectors, float_r2c_unscaled_halfspectrum_unary, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END() // FFTFlags
@@ -1146,7 +1228,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, UnaryFFT | UseVectors, double_
 BOOST_AUTO_TEST_SUITE_END()
 
 // Preallocate configuration tests
-BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate"))
+BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
@@ -1156,7 +1238,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, doub
 BOOST_AUTO_TEST_SUITE_END()
 
 // Keep plans configuration tests
-BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans"))
+BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
@@ -1169,7 +1251,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(FFTFlags, *utf::label("fftflags"))
 
 // Unscaled flag tests
-BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled"))
+BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
@@ -1179,7 +1261,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_
 BOOST_AUTO_TEST_SUITE_END()
 
 // Half-spectrum flag tests
-BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum"))
+BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
@@ -1189,7 +1271,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, dou
 BOOST_AUTO_TEST_SUITE_END()
 
 // Combined flags tests
-BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined"))
+BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Default | UseVectors, double_c2c_unscaled_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Default | UseVectors, double_c2c_unscaled_halfspectrum, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
@@ -1222,7 +1304,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, 
 BOOST_AUTO_TEST_SUITE_END()
 
 // Preallocate configuration tests
-BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate"))
+BOOST_AUTO_TEST_SUITE(preallocate, *utf::label("preallocate") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
@@ -1232,7 +1314,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVector
 BOOST_AUTO_TEST_SUITE_END()
 
 // Keep plans configuration tests
-BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans"))
+BOOST_AUTO_TEST_SUITE(keepplans, *utf::label("keepplans") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
@@ -1245,7 +1327,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(FFTFlags, *utf::label("fftflags"))
 
 // Unscaled flag tests
-BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled"))
+BOOST_AUTO_TEST_SUITE(unscaled, *utf::label("unscaled") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
@@ -1255,7 +1337,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c
 BOOST_AUTO_TEST_SUITE_END()
 
 // Half-spectrum flag tests
-BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum"))
+BOOST_AUTO_TEST_SUITE(halfspectrum, *utf::label("halfspectrum") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
@@ -1265,7 +1347,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double
 BOOST_AUTO_TEST_SUITE_END()
 
 // Combined flags tests
-BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined"))
+BOOST_AUTO_TEST_SUITE(combined, *utf::label("combined") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes, RAND_RUNS)
 BOOST_AUTO_TEST_SUITE_END()
@@ -1280,7 +1362,7 @@ BOOST_AUTO_TEST_SUITE_END() // DoubleTests
 BOOST_AUTO_TEST_SUITE(ComprehensiveTests, *utf::label("comprehensive"))
 
 // Float comprehensive tests
-BOOST_AUTO_TEST_SUITE(Float, *utf::label("float"))
+BOOST_AUTO_TEST_SUITE(Float, *utf::label("float") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
@@ -1297,7 +1379,7 @@ TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_co
 BOOST_AUTO_TEST_SUITE_END()
 
 // Double comprehensive tests
-BOOST_AUTO_TEST_SUITE(Double, *utf::label("double"))
+BOOST_AUTO_TEST_SUITE(Double, *utf::label("double") *utf::label("binary"))
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, RAND_RUNS)
 TEST_FFT_CONFIG_FFT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
