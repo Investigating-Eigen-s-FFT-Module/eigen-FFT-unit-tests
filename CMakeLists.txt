@@ -55,33 +55,33 @@ target_include_directories(UNITTEST_BASE INTERFACE
 set(SRC "main.cpp")
 
 if(UNITTEST_BUILD_KISSFFT)
-    add_executable(unittest_kissfftd ${SRC})
-    target_link_libraries(unittest_kissfftd UNITTEST_BASE)
+    add_executable(unittest_kissfft ${SRC})
+    target_link_libraries(unittest_kissfft UNITTEST_BASE)
 endif()
 
 if(UNITTEST_BUILD_POCKETFFT)
-    add_executable(unittest_pocketfftd ${SRC})
-    target_compile_definitions(unittest_pocketfftd PUBLIC
+    add_executable(unittest_pocketfft ${SRC})
+    target_compile_definitions(unittest_pocketfft PUBLIC
         EIGEN_POCKETFFT_DEFAULT
     )
-    target_link_libraries(unittest_pocketfftd UNITTEST_BASE)
+    target_link_libraries(unittest_pocketfft UNITTEST_BASE)
 endif()
 
 if(UNITTEST_BUILD_FFTW)
-    add_executable(unittest_fftwd ${SRC})
-    target_compile_definitions(unittest_fftwd PUBLIC
+    add_executable(unittest_fftw ${SRC})
+    target_compile_definitions(unittest_fftw PUBLIC
         EIGEN_FFTW_DEFAULT
     )
-    target_link_libraries(unittest_fftwd UNITTEST_BASE FFTW::Double FFTW::Float)
+    target_link_libraries(unittest_fftw UNITTEST_BASE FFTW::Double FFTW::Float)
 endif()
 
 if(UNITTEST_BUILD_MKL)
-    add_executable(unittest_mkld ${SRC})
-    target_compile_definitions(unittest_mkld PUBLIC
+    add_executable(unittest_mkl ${SRC})
+    target_compile_definitions(unittest_mkl PUBLIC
         EIGEN_MKL_DEFAULT
     )
-    target_compile_options(unittest_mkld PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
-    target_include_directories(unittest_mkld PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_compile_options(unittest_mkl PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_COMPILE_OPTIONS>)
+    target_include_directories(unittest_mkl PUBLIC $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
 
-    target_link_libraries(unittest_mkld PUBLIC $<LINK_ONLY:MKL::MKL> UNITTEST_BASE)
+    target_link_libraries(unittest_mkl PUBLIC $<LINK_ONLY:MKL::MKL> UNITTEST_BASE)
 endif()
