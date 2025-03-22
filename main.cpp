@@ -10,6 +10,8 @@
 #include "data_gen.hpp"
 #include "pocketfft_hdronly.h"
 
+#define RAND_RUNS 100
+
 using flag_t = int;
 static const flag_t Default = 0;
 static const flag_t Unscaled = 1;
@@ -76,66 +78,109 @@ class FFTTest {
 
         template <typename FUNC_T>
         void initialiseData(const size_t rows, const size_t cols, FUNC_T f) {
-            fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
-
-            // input generation
-            if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, 1);
-                input_real_v.resize(rows);
-                for (size_t i = 0; i < rows; i++) {
-                    auto& [x, y] = coords(i, 0);
-                    input_real_v(i, 0) = f(x, y);
-                }
-                
-                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
-                    input_real_v.normalize();
-                }
-
-                output_log << "Input real vector [first 5 elements]:" << std::endl;
-                for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
-                    output_log << "  " << i << ": " << input_real_v(i) << std::endl;
-                }
-            }
-            else {
-                input_complex_v = complex_gen.generateCoordinateMatrix(rows, 1);
-                input_complex_v.unaryExpr(f);
-
-                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
-                    input_complex_v.normalize();
-                }
-                
-                output_log << "Input complex vector [first 5 elements]:" << std::endl;
-                for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
-                    output_log << "  " << i << ": " << input_complex_v(i).real() << " + " << input_complex_v(i).imag() << "i" << std::endl;
-                }
-            }
-
-            // Frequency vector
-            if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
-                if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
-                    freq_v = Eigen::VectorX<complex_t>(rows/2 + 1); // TODO: InPlace also needs padding.
-                }
-                else {
-                    freq_v = Eigen::VectorX<complex_t>(rows);
-                }
-
+            // VECTOR INPUT INITIALISATION
+            if constexpr (hasFlag(UseVectors, TEST_FLAGS)) {
+                // REAL VECTORS
                 if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                    output_real_v = Eigen::VectorX<SCALAR_T>(rows);
+                    Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, 1);
+                    input_real_v.resize(rows);
+                    for (size_t i = 0; i < rows; i++) {
+                        auto& [x, y] = coords(i, 0);
+                        input_real_v(i, 0) = f(x, y);
+                    }
+                    
+                    if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                        input_real_v.normalize();
+                    }
+
+                    output_log << "Input real vector [first 5 elements]:" << std::endl;
+                    for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
+                        output_log << "  " << i << ": " << input_real_v(i) << std::endl;
+                    }
                 }
+                // COMPLEX VECTORS
                 else {
-                    output_complex_v = Eigen::VectorX<complex_t>(rows);
+                    input_complex_v = complex_gen.generateCoordinateMatrix(rows, 1);
+                    input_complex_v.unaryExpr(f);
+
+                    if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
+                        input_complex_v.normalize();
+                    }
+                    
+                    output_log << "Input complex vector [first 5 elements]:" << std::endl;
+                    for (int i = 0; i < std::min(5, static_cast<int>(rows)); i++) {
+                        output_log << "  " << i << ": " << input_complex_v(i).real() << " + " << input_complex_v(i).imag() << "i" << std::endl;
+                    }
+                }
+
+                // FREQUENCY VECTOR
+                if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
+                    if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
+                        freq_v = Eigen::VectorX<complex_t>(rows/2 + 1); // TODO: InPlace also needs padding.
+                    }
+                    else {
+                        freq_v = Eigen::VectorX<complex_t>(rows);
+                    }
+
+                    if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                        output_real_v = Eigen::VectorX<SCALAR_T>(rows);
+                    }
+                    else {
+                        output_complex_v = Eigen::VectorX<complex_t>(rows);
+                    }
+                }
+            }
+            // MATRIX INPUT INITIALISATION
+            else {
+                // REAL MATRICES
+                if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                    Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, cols);
+                    input_real.resize(rows, cols);
+                    for (size_t i = 0; i < rows; i++) {
+                        for (size_t j = 0; j < cols; j++) {
+                            auto& [x, y] = coords(i, j);
+                            input_real(i, j) = f(x, y);
+                        }
+                    }
+                }
+                // COMPLEX MATRICES
+                else {
+                    input_complex = complex_gen.generateCoordinateMatrix(rows, cols);
+                    input_complex.unaryExpr(f);
+                }
+
+                // FREQUENCY MATRIX
+                if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
+                    if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
+                        freq = Eigen::MatrixX<complex_t>(rows/2 + 1, cols); // TODO: when allowing row-major order, this needs 2 cases
+                                                                            //       InPlace also needs padding.
+                    }
+                    else {
+                        freq = Eigen::MatrixX<complex_t>(rows, cols);
+                    }
+
+                    if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                        output_real = Eigen::MatrixX<SCALAR_T>(rows, cols);
+                    }
+                    else {
+                        output_complex = Eigen::MatrixX<complex_t>(rows, cols);
+                    }
                 }
             }
         }
 
         template <typename FUNC_T>
         void testRoundTrip(const std::vector<std::pair<size_t, size_t>>& sizes, FUNC_T f) {
+            // ONE-TIME INITALISE Eigen::FFT
+            fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
             for (const auto& [rows, cols] : sizes) {
+                initialiseData(rows, cols, f);
+
+                // VECTOR TESTING
                 if constexpr (hasFlag(UseVectors, TEST_FLAGS)) {
                     BOOST_TEST_CONTEXT("Vector size: " << rows << get_flags_context()) {
 
-                        initialiseData(rows, cols, f);
-
+                        // INPLACE ROUNDTRIP
                         if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
                             // TODO
                             output_log << "InPlace is currently not supported yet." << std::endl;
@@ -143,13 +188,16 @@ class FFTTest {
                             return;
                         }
 
-                        // Actual round trip
+                        // UNARY ROUNDTRIP
                         if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
+                            // REAL UNARY ROUNDTRIP
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
                                 output_log << "c2r using unary operator is currently not supported yet." << std::endl;
                                 BOOST_TEST_MESSAGE(output_log.str());
                                 return;
                             }
+                            // COMPLEX UNARY ROUNDTRIP
                             else {
                                 freq_v = fft.fwd(input_complex_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -175,7 +223,9 @@ class FFTTest {
                                                 "FFT->IFFT roundtrip failed");
                             }
                         }
+                        // BINARY ROUNDTRIP
                         else {
+                            // REAL BINARY ROUNDTRIP
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
                                 fft.fwd(freq_v, input_real_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -200,6 +250,7 @@ class FFTTest {
                                 BOOST_CHECK_MESSAGE(input_real_v.isApprox(output_real_v, get_tolerance<SCALAR_T>()),
                                                 "FFT->IFFT roundtrip failed");
                             }
+                            // COMPLEX BINARY ROUNDTRIP
                             else {
                                 fft.fwd(freq_v, input_complex_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -227,51 +278,22 @@ class FFTTest {
                         }
                     }
                 }
+                // VECTOR TESTING
                 else {
                     BOOST_TEST_CONTEXT("Matrix size: " << rows << "x" << cols << get_flags_context()) {
-                        // input generation
-                        if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                            Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, cols);
-                            input_real.resize(rows, cols);
-                            for (size_t i = 0; i < rows; i++) {
-                                for (size_t j = 0; j < cols; j++) {
-                                    auto& [x, y] = coords(i, j);
-                                    input_real(i, j) = f(x, y);
-                                }
-                            }
-                        }
-                        else {
-                            input_complex = complex_gen.generateCoordinateMatrix(rows, cols);
-                            input_complex.unaryExpr(f);
-                        }
-    
-                        // Frequency matrix
-                        if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
-                            if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
-                                freq = Eigen::MatrixX<complex_t>(rows/2 + 1, cols); // TODO: when allowing row-major order, this needs 2 cases
-                                                                                    //       InPlace also needs padding.
-                            }
-                            else {
-                                freq = Eigen::MatrixX<complex_t>(rows, cols);
-                            }
 
-                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                                output_real = Eigen::MatrixX<SCALAR_T>(rows, cols);
-                            }
-                            else {
-                                output_complex = Eigen::MatrixX<complex_t>(rows, cols);
-                            }
-                        }
-    
+                        // INPLACE ROUNDTRIP
                         if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
                             // TODO
                             BOOST_TEST_MESSAGE("InPlace is currently not supported yet.");
                             return;
                         }
     
-                        // Actual round trip
+                        // UNARY ROUNDTRIP
                         if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
+                            // REAL UNARY ROUNDTRIP
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
                                 BOOST_TEST_MESSAGE("c2r using unary operator is currently not supported yet.");
                                 return;
                                 // freq = fft.fwd(input_real);
@@ -279,6 +301,7 @@ class FFTTest {
                                 // BOOST_CHECK_MESSAGE(input_real.isApprox(output_real, get_tolerance<SCALAR_T>()),
                                 //                     "FFT->IFFT roundtrip failed");
                             }
+                            // COMPLEX UNARY ROUNDTRIP
                             else {
                                 // TODO
                                 BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
@@ -289,7 +312,9 @@ class FFTTest {
                                 //                     "FFT->IFFT roundtrip failed");
                             }
                         }
+                        // BINARY ROUNDTRIP
                         else {
+                            // REAL BINARY ROUNDTRIP
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
                                 BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
                                 return;
@@ -303,6 +328,7 @@ class FFTTest {
                                 // BOOST_CHECK_MESSAGE(input_real.isApprox(output_real, get_tolerance<SCALAR_T>()),
                                 //                     "FFT->IFFT roundtrip failed");
                             }
+                            // COMPLEX BINARY ROUNDTRIP
                             else {
                                 BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
                                 return;
@@ -320,22 +346,25 @@ class FFTTest {
                     }
                 }
 
+                // CLEAR PLANS
                 if (!hasFlag(KeepPlans, TEST_FLAGS)) {
                     fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
                 }
 
                 clear_data();
-            }
+            } // for loop
         }
         
         template <typename FUNC_T>
-        void test_fwd_func(const std::vector<std::pair<size_t, size_t>>& sizes, FUNC_T f) {
+        void testFFT(const std::vector<std::pair<size_t, size_t>>& sizes, FUNC_T f) {
+            // ONE-TIME INITALISE Eigen::FFT
+            fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
             for (const auto& [rows, cols] : sizes) {
+                initialiseData(rows, cols, f);
+                // VECTOR TESTING
                 if constexpr (hasFlag(UseVectors, TEST_FLAGS)) {
                     BOOST_TEST_CONTEXT("Vector size: " << rows << get_flags_context()) {
-
-                        initialiseData(rows, cols, f);
-
+                        // INPLACE FFT
                         if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
                             // TODO
                             output_log << "InPlace is currently not supported yet." << std::endl;
@@ -343,13 +372,16 @@ class FFTTest {
                             return;
                         }
 
-                        // Actual round trip
-                        if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
+                        // UNARY FFT
+                        if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {\
+                            // UNARY REAL FFT
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
                                 output_log << "c2r using unary operator is currently not supported yet." << std::endl;
                                 BOOST_TEST_MESSAGE(output_log.str());
                                 return;
                             }
+                            // UNARY COMPLEX FFT
                             else {
                                 freq_v = fft.fwd(input_complex_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -357,25 +389,23 @@ class FFTTest {
                                     output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
                                 }
                                 
-                                output_complex_v = fft.inv(freq_v);
-                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
-                                    output_complex_v.normalize();
+                                freq_oracle_v = oracle_fwd(input_complex_v);
+                                output_log << "FFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_oracle_v(i).real() << " + " << freq_oracle_v(i).imag() << "i" << std::endl;
                                 }
                                 
-                                output_log << "IFFT output [first 5 elements]:" << std::endl;
-                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
-                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
-                                }
-                                
-                                output_log << "Error magnitude: " << (input_complex_v - output_complex_v).norm() 
+                                output_log << "Error magnitude: " << (freq_v - freq_oracle_v).norm() 
                                           << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
                                 
                                 BOOST_TEST_MESSAGE(output_log.str());
-                                BOOST_CHECK_MESSAGE(input_complex_v.isApprox(output_complex_v, get_tolerance<SCALAR_T>()),
-                                                "FFT->IFFT roundtrip failed");
+                                BOOST_CHECK_MESSAGE(freq_v.isApprox(freq_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "FFT failed");
                             }
                         }
+                        // BINARY FFT
                         else {
+                            // BINARY REAL FFT
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
                                 fft.fwd(freq_v, input_real_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -383,23 +413,20 @@ class FFTTest {
                                     output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
                                 }
                                 
-                                fft.inv(output_real_v, freq_v);
-                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
-                                    output_real_v.normalize();
+                                freq_oracle_v = oracle_fwd(input_real_v);
+                                output_log << "FFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_oracle_v(i).real() << " + " << freq_oracle_v(i).imag() << "i" << std::endl;
                                 }
 
-                                output_log << "IFFT output [first 5 elements]:" << std::endl;
-                                for (int i = 0; i < std::min(5, static_cast<int>(output_real_v.size())); i++) {
-                                    output_log << "  " << i << ": " << output_real_v(i) << std::endl;
-                                }
-                                
-                                output_log << "Error magnitude: " << (input_real_v - output_real_v).norm() 
+                                output_log << "Error magnitude: " << (freq_v - freq_oracle_v).norm() 
                                           << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
                                 
                                 BOOST_TEST_MESSAGE(output_log.str());
-                                BOOST_CHECK_MESSAGE(input_real_v.isApprox(output_real_v, get_tolerance<SCALAR_T>()),
-                                                "FFT->IFFT roundtrip failed");
+                                BOOST_CHECK_MESSAGE(freq_v.isApprox(freq_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "FFT failed");
                             }
+                            // BINARY COMPLEX FFT
                             else {
                                 fft.fwd(freq_v, input_complex_v);
                                 output_log << "FFT output [first 5 elements]:" << std::endl;
@@ -407,77 +434,37 @@ class FFTTest {
                                     output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
                                 }
                                 
-                                fft.inv(output_complex_v, freq_v);
-                                if constexpr (hasFlag(Unscaled, FFT_FLAGS)) {
-                                    output_complex_v.normalize();
+                                freq_oracle_v = oracle_fwd(input_complex_v);
+                                output_log << "FFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_oracle_v(i).real() << " + " << freq_oracle_v(i).imag() << "i" << std::endl;
                                 }
 
-                                output_log << "IFFT output [first 5 elements]:" << std::endl;
-                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
-                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
-                                }
-                                
-                                output_log << "Error magnitude: " << (input_complex_v - output_complex_v).norm() 
+                                output_log << "Error magnitude: " << (freq_v - freq_oracle_v).norm() 
                                           << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
                                 
                                 BOOST_TEST_MESSAGE(output_log.str());
-                                BOOST_CHECK_MESSAGE(input_complex_v.isApprox(output_complex_v, get_tolerance<SCALAR_T>()),
-                                                "FFT->IFFT roundtrip failed");
+                                BOOST_CHECK_MESSAGE(freq_v.isApprox(freq_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "FFT failed");
                             }
                         }
                     }
                 }
+                // MATRIX TESTING
                 else {
                     BOOST_TEST_CONTEXT("Matrix size: " << rows << "x" << cols << get_flags_context()) {
-                        // input generation
-                        if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                            Eigen::MatrixX<std::pair<SCALAR_T, SCALAR_T>> coords = real_gen.generateCoordinateMatrix(rows, cols);
-                            input_real.resize(rows, cols);
-                            for (size_t i = 0; i < rows; i++) {
-                                for (size_t j = 0; j < cols; j++) {
-                                    auto& [x, y] = coords(i, j);
-                                    input_real(i, j) = f(x, y);
-                                }
-                            }
-                        }
-                        else {
-                            input_complex = complex_gen.generateCoordinateMatrix(rows, cols);
-                            input_complex.unaryExpr(f);
-                        }
-    
-                        // Frequency matrix
-                        if constexpr (hasFlag(Preallocate, TEST_FLAGS)) {
-                            if constexpr (hasFlag(HalfSpectrum, FFT_FLAGS)) {
-                                freq = Eigen::MatrixX<complex_t>(rows/2 + 1, cols); // TODO: when allowing row-major order, this needs 2 cases
-                                                                                    //       InPlace also needs padding.
-                            }
-                            else {
-                                freq = Eigen::MatrixX<complex_t>(rows, cols);
-                            }
-
-                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
-                                output_real = Eigen::MatrixX<SCALAR_T>(rows, cols);
-                            }
-                            else {
-                                output_complex = Eigen::MatrixX<complex_t>(rows, cols);
-                            }
-                        }
-    
                         if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
                             // TODO
                             BOOST_TEST_MESSAGE("InPlace is currently not supported yet.");
                             return;
                         }
     
-                        // Actual round trip
+                        // Actual fwd
                         if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
                             if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
                                 BOOST_TEST_MESSAGE("c2r using unary operator is currently not supported yet.");
                                 return;
-                                // freq = fft.fwd(input_real);
-                                // output_real = fft.inv(freq);
-                                // BOOST_CHECK_MESSAGE(input_real.isApprox(output_real, get_tolerance<SCALAR_T>()),
-                                //                     "FFT->IFFT roundtrip failed");
                             }
                             else {
                                 // TODO
@@ -501,6 +488,170 @@ class FFTTest {
                     }
                 }
 
+                // CLEAR PLANS
+                if (!hasFlag(KeepPlans, TEST_FLAGS)) {
+                    fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
+                }
+
+                clear_data();
+            }
+        }
+
+        template <typename FUNC_T>
+        void testIFFT(const std::vector<std::pair<size_t, size_t>>& sizes, FUNC_T f) {
+            // ONE-TIME INITIALISE Eigen::FFT
+            fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
+            for (const auto& [rows, cols] : sizes) {
+                initialiseData(rows, cols, f);
+
+                // VECTOR TESTING
+                if constexpr (hasFlag(UseVectors, TEST_FLAGS)) {
+                    BOOST_TEST_CONTEXT("Vector size: " << rows << get_flags_context()) {
+                        // INPLACE IFFT
+                        if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
+                            // TODO
+                            output_log << "InPlace is currently not supported yet." << std::endl;
+                            BOOST_TEST_MESSAGE(output_log.str());
+                            return;
+                        }
+
+                        // UNARY IFFT
+                        if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
+                            // UNARY REAL IFFT
+                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
+                                output_log << "r2c using unary operator is currently not supported yet." << std::endl;
+                                BOOST_TEST_MESSAGE(output_log.str());
+                                return;
+                            }
+                            // UNARY COMPLEX FFT
+                            else {
+                                // bit hacky but I don't want to redesign data generation, so do an oracle fft
+                                freq_v = oracle_fwd(input_complex_v);
+                                output_log << "Preliminary FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+
+                                output_complex_v = fft.inv(freq_v);
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_complex_oracle_v = oracle_inv(freq_v);
+                                output_log << "IFFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_oracle_v(i).real() << " + " << output_complex_oracle_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (output_complex_v - output_complex_oracle_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
+                                BOOST_CHECK_MESSAGE(output_complex_v.isApprox(output_complex_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "IFFT failed");
+                            }
+                        }
+                        // BINARY IFFT
+                        else {
+                            // BINARY REAL IFFT
+                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // bit hacky but I don't want to redesign data generation, so do an oracle fft
+                                freq_v = oracle_fwd(input_real_v);
+                                output_log << "Preliminary FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+
+                                fft.inv(output_real_v, freq_v);
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_real_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_real_v(i).real() << " + " << output_real_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_real_oracle_v = oracle_inv(freq_v);
+                                output_log << "IFFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_real_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_real_oracle_v(i).real() << " + " << output_real_oracle_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (output_real_v - output_real_oracle_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
+                                BOOST_CHECK_MESSAGE(output_real_v.isApprox(output_real_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "IFFT failed");
+                            }
+                            // BINARY COMPLEX IFFT
+                            else {
+                                // bit hacky but I don't want to redesign data generation, so do an oracle fft
+                                freq_v = oracle_fwd(input_complex_v);
+                                output_log << "Preliminary FFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(freq_v.size())); i++) {
+                                    output_log << "  " << i << ": " << freq_v(i).real() << " + " << freq_v(i).imag() << "i" << std::endl;
+                                }
+
+                                fft.inv(output_complex_v, freq_v);
+                                output_log << "IFFT output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_v(i).real() << " + " << output_complex_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_complex_oracle_v = oracle_inv(freq_v);
+                                output_log << "IFFT Oracle output [first 5 elements]:" << std::endl;
+                                for (int i = 0; i < std::min(5, static_cast<int>(output_complex_oracle_v.size())); i++) {
+                                    output_log << "  " << i << ": " << output_complex_oracle_v(i).real() << " + " << output_complex_oracle_v(i).imag() << "i" << std::endl;
+                                }
+                                
+                                output_log << "Error magnitude: " << (output_complex_v - output_complex_oracle_v).norm() 
+                                          << ", Tolerance: " << get_tolerance<SCALAR_T>() << std::endl;
+                                
+                                BOOST_TEST_MESSAGE(output_log.str());
+                                BOOST_CHECK_MESSAGE(output_complex_v.isApprox(output_complex_oracle_v, get_tolerance<SCALAR_T>()),
+                                                "IFFT failed");
+                            }
+                        }
+                    }
+                }
+                // MATRIX TESTING
+                else {
+                    BOOST_TEST_CONTEXT("Matrix size: " << rows << "x" << cols << get_flags_context()) {
+                        if constexpr (hasFlag(InPlace, TEST_FLAGS)) {
+                            // TODO
+                            BOOST_TEST_MESSAGE("InPlace is currently not supported yet.");
+                            return;
+                        }
+    
+                        // Actual fwd
+                        if constexpr (hasFlag(UnaryFFT, TEST_FLAGS)) {
+                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                // TODO
+                                BOOST_TEST_MESSAGE("c2r using unary operator is currently not supported yet.");
+                                return;
+                            }
+                            else {
+                                // TODO
+                                BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
+                                return;
+                                // freq = fft.fwd(input_complex);
+                            }
+                        }
+                        else {
+                            if constexpr (hasFlag(Real, TEST_FLAGS)) {
+                                BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
+                                return;
+                                // TODO: allow once matrix input is fine
+                            }
+                            else {
+                                BOOST_TEST_MESSAGE("Matrix input is currently not supported yet.");
+                                return;
+                                // TODO: allow once matrix input is fine
+                            }
+                        }
+                    }
+                }
+                // CLEAR PLANS
                 if (!hasFlag(KeepPlans, TEST_FLAGS)) {
                     fft = Eigen::FFT<SCALAR_T>(Eigen::default_fft_impl<SCALAR_T>(), FFT_FLAGS);
                 }
@@ -533,17 +684,23 @@ class FFTTest {
             input_complex = {};
             output_real = {};
             output_complex = {};
+            output_real_oracle = {};
+            output_complex_oracle = {};
             freq = {};
+            freq_oracle = {};
             input_real_v = {};
             input_complex_v = {};
             output_real_v = {};
             output_complex_v = {};
             freq_v = {};
+            output_real_oracle_v = {};
+            output_complex_oracle_v = {};
+            freq_oracle_v = {};
             output_log.clear();
         }
         
         // src can be Eigen::MatrixX<SCALAR_T>; implicit conversion works for same scalar types
-        Eigen::MatrixX<std::complex<SCALAR_T>> oracle_fwd(const Eigen::MatrixX<std::complex<SCALAR_T>>& src, flag_t flags=Default) {
+        Eigen::MatrixX<std::complex<SCALAR_T>> oracle_fwd(const Eigen::MatrixX<std::complex<SCALAR_T>>& src) {
             Eigen::MatrixX<big_complex_t> src_cp = src.template cast<big_complex_t>();
             big_complex_t* src_ptr = src_cp.data();
         
@@ -573,7 +730,7 @@ class FFTTest {
             return dst_cp;
         }
         
-        auto oracle_inv(const Eigen::MatrixX<std::complex<SCALAR_T>>& src, flag_t flags=Default) {
+        auto oracle_inv(const Eigen::MatrixX<std::complex<SCALAR_T>>& src) {
             Eigen::MatrixX<big_complex_t> src_cp = src.template cast<big_complex_t>();
             big_complex_t* src_ptr = src_cp.data();
         
@@ -593,7 +750,7 @@ class FFTTest {
         
             c2c(shape, stride, stride, axes, BACKWARD, src_ptr, dst_ptr, static_cast<big_float_t>(1), static_cast<size_t>(1));
         
-            if (!hasFlag(Unscaled, flags)) {
+            if (!hasFlag(Unscaled, FFT_FLAGS)) {
                 dst /= nfft0 * nfft1;
             }
         
@@ -613,12 +770,18 @@ class FFTTest {
         Eigen::MatrixX<complex_t> input_complex;
         Eigen::MatrixX<SCALAR_T> output_real;
         Eigen::MatrixX<complex_t> output_complex;
+        Eigen::MatrixX<SCALAR_T> output_real_oracle;
+        Eigen::MatrixX<complex_t> output_complex_oracle;
         Eigen::MatrixX<complex_t> freq;
+        Eigen::MatrixX<complex_t> freq_oracle;
         Eigen::VectorX<SCALAR_T> input_real_v;
         Eigen::VectorX<complex_t> input_complex_v;
         Eigen::VectorX<SCALAR_T> output_real_v;
         Eigen::VectorX<complex_t> output_complex_v;
         Eigen::VectorX<complex_t> freq_v;
+        Eigen::VectorX<SCALAR_T> output_real_oracle_v;
+        Eigen::VectorX<complex_t> output_complex_oracle_v;
+        Eigen::VectorX<complex_t> freq_oracle_v;
         Eigen::FFT<SCALAR_T> fft;
         std::stringstream output_log;
 };
@@ -655,35 +818,105 @@ namespace utf = boost::unit_test;
 // Main test suite
 BOOST_AUTO_TEST_SUITE(EigenFFTTests)
 
-// Macro to create test cases with deterministic test functions
+// Macro to create test cases with deterministic roundtrip test functions
 #define TEST_FFT_CONFIG_RT_FUNC(scalar_type, fft_flags, test_flags, test_name, sizes_func) \
-        FFTTest<scalar_type, fft_flags, Default, test_flags> tester_##test_name; \
-        BOOST_AUTO_TEST_CASE(test_name##_sin, *utf::description("Testing Roundtrip FFT with " #scalar_type " and sin signal")) { \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> tester_##test_name##_rt; \
+        BOOST_AUTO_TEST_CASE(test_name##_rt_sin, *utf::description("Testing Roundtrip FFT with " #scalar_type " and sin signal")) { \
             if constexpr (hasFlag(Real, test_flags)) { \
-                tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), sin2d<scalar_type>); \
+                tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), sin2d<scalar_type>); \
             } else { \
-                tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
+                tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
             } \
         } \
-        BOOST_AUTO_TEST_CASE(test_name##_const, *utf::description("Testing Roundtrip FFT with " #scalar_type " and const signal")) { \
+        BOOST_AUTO_TEST_CASE(test_name##_rt_const, *utf::description("Testing Roundtrip FFT with " #scalar_type " and const signal")) { \
             if constexpr (hasFlag(Real, test_flags)) { \
-                tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), real_const<scalar_type>); \
+                tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), real_const<scalar_type>); \
             } else { \
-                tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), complex_const<scalar_type>); \
+                tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), complex_const<scalar_type>); \
             } \
         }
 
-// Macro for random test functions that run multiple iterations
+// Macro for random roundtrip test functions that run multiple iterations
 #define TEST_FFT_CONFIG_RT_FUNC_RANDOM(scalar_type, fft_flags, test_flags, test_name, sizes_func, iterations) \
-        FFTTest<scalar_type, fft_flags, Default, test_flags> random_tester_##test_name; \
-        BOOST_AUTO_TEST_CASE(test_name##_random, *utf::description("Testing Roundtrip FFT with " #scalar_type " and random signal")) { \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> random_tester_##test_name##_rt; \
+        BOOST_AUTO_TEST_CASE(test_name##_rt_random, *utf::description("Testing Roundtrip FFT with " #scalar_type " and random signal")) { \
             for (int iter = 0; iter < iterations; ++iter) { \
                 BOOST_TEST_CONTEXT("Random iteration " << iter + 1 << " of " << iterations) { \
                     if constexpr (hasFlag(Real, test_flags)) { \
-                        random_tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), \
+                        random_tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), \
                             [](scalar_type x, scalar_type y) { return random(x, y); }); \
                     } else { \
-                        random_tester_##test_name.testRoundTrip(TestDimensions::sizes_func(), \
+                        random_tester_##test_name##_rt.testRoundTrip(TestDimensions::sizes_func(), \
+                            [](std::complex<scalar_type> z) { return random(z); }); \
+                    } \
+                } \
+            } \
+        }
+
+// Macro to create test cases with deterministic FFT test functions
+#define TEST_FFT_CONFIG_FFT_FUNC(scalar_type, fft_flags, test_flags, test_name, sizes_func) \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> tester_##test_name##_fft; \
+        BOOST_AUTO_TEST_CASE(test_name##_fft_sin, *utf::description("Testing FFT with " #scalar_type " and sin signal")) { \
+            if constexpr (hasFlag(Real, test_flags)) { \
+                tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), sin2d<scalar_type>); \
+            } else { \
+                tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
+            } \
+        } \
+        BOOST_AUTO_TEST_CASE(test_name##_fft_const, *utf::description("Testing FFT with " #scalar_type " and const signal")) { \
+            if constexpr (hasFlag(Real, test_flags)) { \
+                tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), real_const<scalar_type>); \
+            } else { \
+                tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), complex_const<scalar_type>); \
+            } \
+        }
+
+// Macro for random FFT test functions that run multiple iterations
+#define TEST_FFT_CONFIG_FFT_FUNC_RANDOM(scalar_type, fft_flags, test_flags, test_name, sizes_func, iterations) \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> random_tester_##test_name##_fft; \
+        BOOST_AUTO_TEST_CASE(test_name##_fft_random, *utf::description("Testing FFT with " #scalar_type " and random signal")) { \
+            for (int iter = 0; iter < iterations; ++iter) { \
+                BOOST_TEST_CONTEXT("Random iteration " << iter + 1 << " of " << iterations) { \
+                    if constexpr (hasFlag(Real, test_flags)) { \
+                        random_tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), \
+                            [](scalar_type x, scalar_type y) { return random(x, y); }); \
+                    } else { \
+                        random_tester_##test_name##_fft.testFFT(TestDimensions::sizes_func(), \
+                            [](std::complex<scalar_type> z) { return random(z); }); \
+                    } \
+                } \
+            } \
+        }
+
+// Macro to create test cases with deterministic IFFT test functions
+#define TEST_FFT_CONFIG_IFFT_FUNC(scalar_type, fft_flags, test_flags, test_name, sizes_func) \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> tester_##test_name##_ifft; \
+        BOOST_AUTO_TEST_CASE(test_name##_ifft_sin, *utf::description("Testing IFFT with " #scalar_type " and sin signal")) { \
+            if constexpr (hasFlag(Real, test_flags)) { \
+                tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), sin2d<scalar_type>); \
+            } else { \
+                tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), std::sin<std::complex<scalar_type>>); \
+            } \
+        } \
+        BOOST_AUTO_TEST_CASE(test_name##_ifft_const, *utf::description("Testing IFFT with " #scalar_type " and const signal")) { \
+            if constexpr (hasFlag(Real, test_flags)) { \
+                tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), real_const<scalar_type>); \
+            } else { \
+                tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), complex_const<scalar_type>); \
+            } \
+        }
+
+// Macro for random IFFT test functions that run multiple iterations
+#define TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(scalar_type, fft_flags, test_flags, test_name, sizes_func, iterations) \
+        FFTTest<scalar_type, fft_flags, Default, test_flags> random_tester_##test_name##_ifft; \
+        BOOST_AUTO_TEST_CASE(test_name##_ifft_random, *utf::description("Testing IFFT with " #scalar_type " and random signal")) { \
+            for (int iter = 0; iter < iterations; ++iter) { \
+                BOOST_TEST_CONTEXT("Random iteration " << iter + 1 << " of " << iterations) { \
+                    if constexpr (hasFlag(Real, test_flags)) { \
+                        random_tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), \
+                            [](scalar_type x, scalar_type y) { return random(x, y); }); \
+                    } else { \
+                        random_tester_##test_name##_ifft.testIFFT(TestDimensions::sizes_func(), \
                             [](std::complex<scalar_type> z) { return random(z); }); \
                     } \
                 } \
@@ -695,7 +928,7 @@ BOOST_AUTO_TEST_SUITE(FloatComplexToComplexVectorTests)
 
 // Basic tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, 5)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT function tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes)
@@ -737,7 +970,7 @@ BOOST_AUTO_TEST_SUITE(FloatRealToComplexVectorTests)
 
 // Basic real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, 5)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes)
@@ -774,12 +1007,12 @@ TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled | HalfSpectrum, Real | UseVectors
 
 BOOST_AUTO_TEST_SUITE_END()
 
-// Group 5: Double Complex-to-Complex Vector Tests
+// Group RAND_RUNS: Double Complex-to-Complex Vector Tests
 BOOST_AUTO_TEST_SUITE(DoubleComplexToComplexVectorTests)
 
 // Basic tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, 5)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT function tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes)
@@ -817,19 +1050,19 @@ BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorTests)
 
 // Basic real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, 5)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, RAND_RUNS)
 
 // Preallocate real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, RAND_RUNS)
 
 // Keep plans real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -838,11 +1071,11 @@ BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorFFTFlagsTests)
 
 // Unscaled real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, RAND_RUNS)
 
 // Half-spectrum real tests
 TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -850,7 +1083,7 @@ BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorFFTMixedFlagsTests)
 
 // Combined flags real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled | HalfSpectrum, Real | UseVectors, double_r2c_unscaled_halfspectrum, getSimpleSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -859,17 +1092,17 @@ BOOST_AUTO_TEST_SUITE(ComprehensiveVectorTests)
 
 // Float comprehensive tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, RAND_RUNS)
 
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, RAND_RUNS)
 
 // Double comprehensive tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, RAND_RUNS)
 
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes)
-TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, 3)
+TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
