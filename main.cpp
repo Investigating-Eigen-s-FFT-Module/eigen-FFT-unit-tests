@@ -567,13 +567,13 @@ class FFTTest {
                                 fft.inv(output_real_v, freq_v);
                                 output_log << "IFFT output [first 5 elements]:" << std::endl;
                                 for (int i = 0; i < std::min(5, static_cast<int>(output_real_v.size())); i++) {
-                                    output_log << "  " << i << ": " << output_real_v(i).real() << " + " << output_real_v(i).imag() << "i" << std::endl;
+                                    output_log << "  " << i << ": " << output_real_v(i) << std::endl;
                                 }
                                 
                                 output_real_oracle_v = oracle_inv(freq_v);
                                 output_log << "IFFT Oracle output [first 5 elements]:" << std::endl;
                                 for (int i = 0; i < std::min(5, static_cast<int>(output_real_oracle_v.size())); i++) {
-                                    output_log << "  " << i << ": " << output_real_oracle_v(i).real() << " + " << output_real_oracle_v(i).imag() << "i" << std::endl;
+                                    output_log << "  " << i << ": " << output_real_oracle_v(i) << std::endl;
                                 }
                                 
                                 output_log << "Error magnitude: " << (output_real_v - output_real_oracle_v).norm() 
@@ -929,18 +929,34 @@ BOOST_AUTO_TEST_SUITE(FloatComplexToComplexVectorTests)
 // Basic tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT function tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, UnaryFFT | UseVectors, float_c2c_unary, getSimpleSizes, 3)
 
 // Preallocate tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Preallocate | UseVectors, float_c2c_prealloc, getSimpleSizes, 3)
 
 // Keep plans tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, KeepPlans | UseVectors, float_c2c_keepplans, getSimpleSizes, 3)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -950,10 +966,18 @@ BOOST_AUTO_TEST_SUITE(FloatComplexToComplexVectorFFTFlagsTests)
 // Unscaled FFT tests
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Default | UseVectors, float_c2c_unscaled, getSimpleSizes, 3)
 
 // Half-spectrum tests
 TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Default | UseVectors, float_c2c_halfspectrum, getSimpleSizes, 3)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -971,18 +995,34 @@ BOOST_AUTO_TEST_SUITE(FloatRealToComplexVectorTests)
 // Basic real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | UnaryFFT | UseVectors, float_r2c_unary, getSimpleSizes, 3)
 
 // Preallocate real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | Preallocate | UseVectors, float_r2c_prealloc, getSimpleSizes, 3)
 
 // Keep plans real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | KeepPlans | UseVectors, float_r2c_keepplans, getSimpleSizes, 3)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -992,10 +1032,18 @@ BOOST_AUTO_TEST_SUITE(FloatRealToComplexVectorFFTFlagsTests)
 // Unscaled real tests
 TEST_FFT_CONFIG_RT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Unscaled, Real | UseVectors, float_r2c_unscaled, getSimpleSizes, 3)
 
 // Half-spectrum real tests
 TEST_FFT_CONFIG_RT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, HalfSpectrum, Real | UseVectors, float_r2c_halfspectrum, getSimpleSizes, 3)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1013,18 +1061,34 @@ BOOST_AUTO_TEST_SUITE(DoubleComplexToComplexVectorTests)
 // Basic tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT function tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, UnaryFFT | UseVectors, double_c2c_unary, getSimpleSizes, 3)
 
 // Preallocate tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Preallocate | UseVectors, double_c2c_prealloc, getSimpleSizes, 3)
 
 // Keep plans tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, KeepPlans | UseVectors, double_c2c_keepplans, getSimpleSizes, 3)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1034,10 +1098,18 @@ BOOST_AUTO_TEST_SUITE(DoubleComplexToComplexFFTFlagsTests)
 // Unscaled FFT tests
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Unscaled, Default | UseVectors, double_c2c_unscaled, getSimpleSizes, 3)
 
 // Half-spectrum tests
 TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_FFT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes, 3)
+TEST_FFT_CONFIG_IFFT_FUNC(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, HalfSpectrum, Default | UseVectors, double_c2c_halfspectrum, getSimpleSizes, 3)
 
 // Combined flags tests
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled | HalfSpectrum, Default | UseVectors, double_c2c_unscaled_halfspectrum, getSimpleSizes)
@@ -1051,18 +1123,34 @@ BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorTests)
 // Basic real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_basic, getSimpleSizes, RAND_RUNS)
 
 // Unary FFT real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | UnaryFFT | UseVectors, double_r2c_unary, getSimpleSizes, RAND_RUNS)
 
 // Preallocate real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | Preallocate | UseVectors, double_r2c_prealloc, getSimpleSizes, RAND_RUNS)
 
 // Keep plans real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | KeepPlans | UseVectors, double_r2c_keepplans, getSimpleSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1072,10 +1160,18 @@ BOOST_AUTO_TEST_SUITE(DoubleRealToComplexVectorFFTFlagsTests)
 // Unscaled real tests
 TEST_FFT_CONFIG_RT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Unscaled, Real | UseVectors, double_r2c_unscaled, getSimpleSizes, RAND_RUNS)
 
 // Half-spectrum real tests
 TEST_FFT_CONFIG_RT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, HalfSpectrum, Real | UseVectors, double_r2c_halfspectrum, getSimpleSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1093,21 +1189,41 @@ BOOST_AUTO_TEST_SUITE(ComprehensiveVectorTests)
 // Float comprehensive tests
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Default | UseVectors, float_c2c_comprehensive, getTestSizes, RAND_RUNS)
 
 TEST_FFT_CONFIG_RT_FUNC(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(float, Default, Real | UseVectors, float_r2c_comprehensive, getTestSizes, RAND_RUNS)
 
 // Double comprehensive tests
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Default | UseVectors, double_c2c_comprehensive, getTestSizes, RAND_RUNS)
 
 TEST_FFT_CONFIG_RT_FUNC(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes)
 TEST_FFT_CONFIG_RT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_FFT_FUNC(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_FFT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, RAND_RUNS)
+TEST_FFT_CONFIG_IFFT_FUNC(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes)
+TEST_FFT_CONFIG_IFFT_FUNC_RANDOM(double, Default, Real | UseVectors, double_r2c_comprehensive, getTestSizes, RAND_RUNS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
 // Clean up macros
 #undef TEST_FFT_CONFIG_RT_FUNC
 #undef TEST_FFT_CONFIG_RT_FUNC_RANDOM
+#undef TEST_FFT_CONFIG_FFT_FUNC
+#undef TEST_FFT_CONFIG_FFT_FUNC_RANDOM
+#undef TEST_FFT_CONFIG_IFFT_FUNC
+#undef TEST_FFT_CONFIG_IFFT_FUNC_RANDOM
 
 BOOST_AUTO_TEST_SUITE_END() // EigenFFTTests
