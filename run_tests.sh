@@ -11,13 +11,16 @@ fi
 EXECUTABLE=$1
 TEST_SUITES=(
   "EigenFFTTests/FloatComplexToComplexVectorTests"
-  "EigenFFTTests/FloatComplexToComplexFFTFlagsTests"
+  "EigenFFTTests/FloatComplexToComplexVectorFFTFlagsTests"
+  # "EigenFFTTests/FloatComplexToComplexVectorFFTMixedFlagsTests"
   "EigenFFTTests/FloatRealToComplexVectorTests"
-  "EigenFFTTests/FloatRealToComplexFFTFlagsTests"
+  "EigenFFTTests/FloatRealToComplexVectorFFTFlagsTests"
   "EigenFFTTests/DoubleComplexToComplexVectorTests"
   "EigenFFTTests/DoubleComplexToComplexFFTFlagsTests"
+  # "EigenFFTTests/DoubleComplexToComplexFFTMixedFlagsTests"
   "EigenFFTTests/DoubleRealToComplexVectorTests"
-  "EigenFFTTests/DoubleRealToComplexFFTFlagsTests"
+  "EigenFFTTests/DoubleRealToComplexVectorFFTFlagsTests"
+  "EigenFFTTests/DoubleRealToComplexVectorFFTMixedFlagsTests"
   "EigenFFTTests/ComprehensiveVectorTests"
 )
 
