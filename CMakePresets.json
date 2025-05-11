@@ -12,16 +12,9 @@
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_MAKE_PROGRAM": "/usr/bin/make",
         "CMAKE_C_COMPILER": "icx",
-        "CMAKE_CXX_COMPILER": "icpx",
-        "MKL_DIR": "$env{HOME}/intel/oneapi/mkl/2025.0/lib/cmake/mkl",
-        "MKL_THREADING:": "sequential",
-        "UNITTEST_BUILD_FFTW" : "ON",
-        "UNITTEST_BUILD_POCKETFFT": "ON",
-        "UNITTEST_BUILD_KISSFFT": "ON",
-        "UNITTEST_BUILD_MKL": "ON"
+        "CMAKE_CXX_COMPILER": "icpx"
       }
     }
   ]
