@@ -13,8 +13,8 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_MAKE_PROGRAM": "/usr/bin/make",
-        "CMAKE_C_COMPILER": "icx",
-        "CMAKE_CXX_COMPILER": "icpx"
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
       }
     }
   ]
