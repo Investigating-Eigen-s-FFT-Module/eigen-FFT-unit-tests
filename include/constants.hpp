@@ -1,4 +1,4 @@
 #pragma once
 
-constexpr unsigned NFFT0 = 7;
-constexpr unsigned NFFT1 = 4;
+constexpr int NFFT0 = 7;
+constexpr int NFFT1 = 4;

@@ -16,6 +16,7 @@ using EigenStaticHalfSpectrumVeccd = Eigen::Vector<std::complex<double>, NFFT0 /
 using EigenStaticMatcd = Eigen::Matrix<std::complex<double>, NFFT0, NFFT1>;
 using EigenStaticHalfSpectrumMatcd = Eigen::Matrix<std::complex<double>, NFFT0 / 2 + 1, NFFT1>;
 
+// TODO: Add RowVector + RowMajor matrices once nfft runtime arg is implemented
 using EigenStaticVecd = Eigen::Vector<double, NFFT0>;
 using EigenStaticMatd = Eigen::Matrix<double, NFFT0, NFFT1>;
 
@@ -185,6 +186,16 @@ TYPED_TEST(C2CTest, BinaryCalls) {
   this->GenerateTestdata();
   this->TestBinaryTransform();
 }
+TYPED_TEST(C2CTest, BinaryCallsWithRuntimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransform(NFFT0, NFFT1);
+}
+TYPED_TEST(C2CTest, BinaryCallsWithCompiletimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransformExplicitCompileTimeNFFT();
+}
 
 TYPED_TEST_SUITE(R2CTest, R2COptionTest);
 TYPED_TEST(R2CTest, BinaryCalls) {
@@ -192,12 +203,32 @@ TYPED_TEST(R2CTest, BinaryCalls) {
   this->GenerateTestdata();
   this->TestBinaryTransform();
 }
+TYPED_TEST(R2CTest, BinaryCallsWithRuntimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransform(NFFT0, NFFT1);
+}
+TYPED_TEST(R2CTest, BinaryCallsWithCompiletimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransformExplicitCompileTimeNFFT();
+}
 
 TYPED_TEST_SUITE(C2RTest, C2ROptionTest);
 TYPED_TEST(C2RTest, BinaryCalls) {
   std::cout << TypeParam::name();
   this->GenerateTestdata();
   this->TestBinaryTransform();
+}
+TYPED_TEST(C2RTest, BinaryCallsWithRuntimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransform(NFFT0, NFFT1);
+}
+TYPED_TEST(C2RTest, BinaryCallsWithCompiletimeNFFT) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestBinaryTransformExplicitCompileTimeNFFT();
 }
 
 int main(int argc, char **argv) {
