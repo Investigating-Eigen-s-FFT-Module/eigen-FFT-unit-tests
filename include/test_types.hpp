@@ -68,7 +68,6 @@ struct FFTCallSpec {
        << (Forward ? "Forward" : "Inverse") << std::endl
        << (SrcReal ? "R" : "C") << "2" << (DstReal ? "R" : "C") << std::endl
        << "Options: " << (Opts & Eigen::FFTOption::Scaled ? "Scaled" : "Unscaled") << ", "
-       << (Opts & Eigen::FFTOption::InPlace ? "InPlace" : "OutPlace") << ", "
        << (Opts & Eigen::FFTOption::HalfSpectrum ? "HalfSpectrum" : "FullSpectrum") << std::endl;
 
     return ss.str();

@@ -38,6 +38,10 @@ class FFTTestBase : public testing::Test {
   virtual void TestBinaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) = 0;
   virtual void TestBinaryTransformExplicitCompileTimeNFFT() = 0;
 
+  virtual void TestUnaryTransform() = 0;
+  virtual void TestUnaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) = 0;
+  virtual void TestUnaryTransformExplicitCompileTimeNFFT() = 0;
+
   virtual void TestAgainstOracle(DstMatrixType& dst, SrcMatrixType& src, size_t nfft0, size_t nfft1) = 0;
 
   SrcMatrixType src;
@@ -74,6 +78,37 @@ class FFTTestBase : public testing::Test {
 
     return dst_cp;
   }
+
+  template <typename AdjustedSrcMatrixType>
+  auto OracleFFT(const AdjustedSrcMatrixType& src, const size_t nfft) {
+    using ComplexVectorType = std::conditional_t<AdjustedSrcMatrixType::ColsAtCompileTime == 1,
+                                                 Eigen::RowVectorX<BigComplexScalar>, Eigen::VectorX<BigComplexScalar>>;
+    ComplexVectorType src_cp = src.template cast<BigComplexScalar>();
+    BigComplexScalar* src_ptr = src_cp.data();
+    ComplexVectorType dst_cp(nfft);
+
+    using namespace pocketfft;
+
+    const shape_t shape{nfft};
+    const shape_t axes{0};
+    const stride_t stride_in{static_cast<ptrdiff_t>(src_cp.stride() * sizeof(BigComplexScalar))};
+    const stride_t stride_out{static_cast<ptrdiff_t>(dst_cp.stride() * sizeof(BigComplexScalar))};
+
+    BigComplexScalar* dst_ptr = dst_cp.data();
+
+    c2c(shape, stride_in, stride_out, axes, CallSpec::Forward, src_ptr, dst_ptr, static_cast<BigRealScalar>(1),
+        static_cast<size_t>(1));
+    return dst_cp;
+  }
+
+  template <typename AdjustedSrcMatrixType>
+  auto GetOracle(const AdjustedSrcMatrixType& src, const size_t nfft0, const size_t nfft1) {
+    if constexpr (CallSpec::Is1D) {
+      return OracleFFT(src, std::max(nfft0, nfft1));
+    } else {
+      return OracleFFT(src, nfft0, nfft1);
+    }
+  }
 };
 
 template <typename CallSpec>
@@ -90,50 +125,120 @@ class C2CTest : public FFTTestBase<CallSpec> {
 
   virtual void TestBinaryTransform() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Forward) {
       fft.fwd(dst, src);
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     } else {
-      fft.inv(dst, src);
+      if constexpr (CallSpec::Options & Eigen::FFTOption::HalfSpectrum) {
+        // HalfSpectrum inv always requires specifying nfft
+        if constexpr (CallSpec::Is1D) {
+          fft.inv(dst, src, NFFT0);
+        } else {
+          fft.inv(dst, src, NFFT0, NFFT1);
+        }
+      }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     }
   }
 
   virtual void TestBinaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Forward) {
-      // TODO: currently only single nfft arg, will be 2 later on
-      fft.fwd(dst, src, nfft0);
+      if constexpr (CallSpec::Is1D) {
+        fft.fwd(dst, src, nfft0);
+      } else {
+        fft.fwd(dst, src, nfft0, nfft1);
+      }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     } else {
-      fft.inv(dst, src, nfft0);
+      if constexpr (CallSpec::Is1D) {
+        fft.inv(dst, src, nfft0);
+      } else {
+        fft.inv(dst, src, nfft0, nfft1);
+      }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     }
   }
 
   virtual void TestBinaryTransformExplicitCompileTimeNFFT() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Forward) {
-      // TODO: currently only single nfft arg, will be 2 later on
-      fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      if constexpr (CallSpec::Is1D) {
+        fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      } else {
+        fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+      }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     } else {
-      fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      if constexpr (CallSpec::Is1D) {
+        fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      } else {
+        fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    }
+  }
+
+  virtual void TestUnaryTransform() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Forward) {
+      dst = fft.fwd(src);
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    } else {
+      // HalfSpectrum inv always requires specifying nfft
+      if constexpr (CallSpec::Options & Eigen::FFTOption::HalfSpectrum) {
+        if constexpr (CallSpec::Is1D) {
+          dst = fft.inv(src, NFFT0);
+        } else {
+          dst = fft.inv(src, NFFT0, NFFT1);
+        }
+      } else {
+        dst = fft.inv(src);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    }
+  }
+
+  virtual void TestUnaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Forward) {
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.fwd(src, nfft0);
+      } else {
+        dst = fft.fwd(src, nfft0, nfft1);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    } else {
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.inv(src, nfft0);
+      } else {
+        dst = fft.inv(src, nfft0, nfft1);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    }
+  }
+
+  virtual void TestUnaryTransformExplicitCompileTimeNFFT() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Forward) {
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.template fwd<SrcMatrixType, NFFT0>(src);
+      } else {
+        dst = fft.template fwd<SrcMatrixType, NFFT0, NFFT1>(src);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    } else {
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.template inv<SrcMatrixType, NFFT0>(src);
+      } else {
+        dst = fft.template inv<SrcMatrixType, NFFT0, NFFT1>(src);
+      }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     }
   }
@@ -142,7 +247,7 @@ class C2CTest : public FFTTestBase<CallSpec> {
     {
       using namespace Eigen::FFTOption;
 
-      DstMatrixType oracle = Base::OracleFFT(src, nfft0, nfft1).template cast<typename DstMatrixType::Scalar>();
+      DstMatrixType oracle = Base::GetOracle(src, nfft0, nfft1).template cast<typename DstMatrixType::Scalar>();
 
       // IFFT(FFT(x)) == a * x if Unscaled is enabled
       if constexpr (Options & Unscaled) {
@@ -176,10 +281,6 @@ class R2CTest : public FFTTestBase<CallSpec> {
 
   virtual void TestBinaryTransform() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
     fft.fwd(dst, src);
     TestAgainstOracle(dst, src, src.rows(), src.cols());
@@ -187,23 +288,52 @@ class R2CTest : public FFTTestBase<CallSpec> {
 
   virtual void TestBinaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
-    fft.fwd(dst, src, nfft0);
+    if constexpr (CallSpec::Is1D) {
+      fft.fwd(dst, src, nfft0);
+    } else {
+      fft.fwd(dst, src, nfft0, nfft1);
+    }
     TestAgainstOracle(dst, src, src.rows(), src.cols());
   }
 
   virtual void TestBinaryTransformExplicitCompileTimeNFFT() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
-    fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+    if constexpr (CallSpec::Is1D) {
+      fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+    } else {
+      fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+    }
+    TestAgainstOracle(dst, src, src.rows(), src.cols());
+  }
+
+  virtual void TestUnaryTransform() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    dst = fft.fwd(src);
+    TestAgainstOracle(dst, src, src.rows(), src.cols());
+  }
+
+  virtual void TestUnaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Is1D) {
+      dst = fft.fwd(src, nfft0);
+    } else {
+      dst = fft.fwd(src, nfft0, nfft1);
+    }
+    TestAgainstOracle(dst, src, src.rows(), src.cols());
+  }
+
+  virtual void TestUnaryTransformExplicitCompileTimeNFFT() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Is1D) {
+      dst = fft.template fwd<SrcMatrixType, NFFT0>(src);
+    } else {
+      dst = fft.template fwd<SrcMatrixType, NFFT0, NFFT1>(src);
+    }
     TestAgainstOracle(dst, src, src.rows(), src.cols());
   }
 
@@ -213,9 +343,12 @@ class R2CTest : public FFTTestBase<CallSpec> {
 
       // Handle resize in R2C case
       // If DstMatrixType is statically sized, we cannot resize to halfspectrum, hence cast to dynamic equivalent
-      using DynamicDstType = std::conditional_t<CallSpec::Is1D, Eigen::VectorX<typename DstMatrixType::Scalar>,
-                                                Eigen::MatrixX<typename DstMatrixType::Scalar>>;
-      DynamicDstType oracle = Base::OracleFFT(src, nfft0, nfft1).template cast<typename DstMatrixType::Scalar>();
+      using DynamicDstType = std::conditional_t<
+          CallSpec::Is1D,
+          std::conditional_t<DstMatrixType::RowsAtCompileTime == 1, Eigen::RowVectorX<typename DstMatrixType::Scalar>,
+                             Eigen::VectorX<typename DstMatrixType::Scalar>>,
+          Eigen::MatrixX<typename DstMatrixType::Scalar>>;
+      DynamicDstType oracle = Base::GetOracle(src, nfft0, nfft1).template cast<typename DstMatrixType::Scalar>();
 
       if constexpr (Options & HalfSpectrum) {
         if constexpr (CallSpec::Is1D) {
@@ -295,10 +428,6 @@ class C2RTest : public FFTTestBase<CallSpec> {
 
   virtual void TestBinaryTransform() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
 
     // For binary call with no nfft arg (neither template nor runtime),
@@ -316,25 +445,64 @@ class C2RTest : public FFTTestBase<CallSpec> {
 
   virtual void TestBinaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
-
-    fft.inv(dst, src, nfft0);
+    if constexpr (CallSpec::Is1D) {
+      fft.inv(dst, src, nfft0);
+    } else {
+      fft.inv(dst, src, nfft0, nfft1);
+    }
     TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
   }
 
   virtual void TestBinaryTransformExplicitCompileTimeNFFT() override final {
     using namespace Eigen::FFTOption;
-    if constexpr (Options & InPlace) {
-      // Skip, not implemented yet
-      GTEST_SKIP() << "In-place FFT not implemented yet";
-    }
     Eigen::FFT<Options> fft;
 
-    fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+    if constexpr (CallSpec::Is1D) {
+      fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+    } else {
+      fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+    }
+    TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
+  }
+
+  virtual void TestUnaryTransform() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+
+    if constexpr (CallSpec::Options & HalfSpectrum) {
+      // Always need to specify nfft0 for C2R, as it is not possible to infer it from src
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.inv(src, NFFT0);
+      } else {
+        dst = fft.inv(src, NFFT0, NFFT1);
+      }
+    } else {
+      dst = fft.inv(src);
+    }
+    TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
+  }
+
+  virtual void TestUnaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Is1D) {
+      dst = fft.inv(src, nfft0);
+    } else {
+      dst = fft.inv(src, nfft0, nfft1);
+    }
+    TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
+  }
+
+  virtual void TestUnaryTransformExplicitCompileTimeNFFT() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+
+    if constexpr (CallSpec::Is1D) {
+      dst = fft.template inv<SrcMatrixType, NFFT0>(src);
+    } else {
+      dst = fft.template inv<SrcMatrixType, NFFT0, NFFT1>(src);
+    }
     TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
   }
 
@@ -358,7 +526,7 @@ class C2RTest : public FFTTestBase<CallSpec> {
       }
       ReflectSpectrum(src_d);
       DstMatrixType oracle =
-          Base::OracleFFT(src_d, nfft0, nfft1).template cast<typename SrcMatrixType::Scalar>().real();
+          Base::GetOracle(src_d, nfft0, nfft1).template cast<typename SrcMatrixType::Scalar>().real();
 
       // IFFT(FFT(x)) == a * x if Unscaled is enabled
       if constexpr (Options & Unscaled) {
