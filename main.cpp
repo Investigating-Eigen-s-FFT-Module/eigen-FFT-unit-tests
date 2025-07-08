@@ -38,6 +38,11 @@ TYPED_TEST(C2CTest, UnaryCallsWithCompiletimeNFFT) {
   this->GenerateTestdata();
   this->TestUnaryTransformExplicitCompileTimeNFFT();
 }
+TYPED_TEST(C2CTest, UnaryCallsWithDstType) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestUnaryTransformExplicitDstType();
+}
 
 TYPED_TEST_SUITE(R2CTest, R2COptionTests);
 TYPED_TEST(R2CTest, BinaryCalls) {
@@ -70,6 +75,11 @@ TYPED_TEST(R2CTest, UnaryCallsWithCompiletimeNFFT) {
   this->GenerateTestdata();
   this->TestUnaryTransformExplicitCompileTimeNFFT();
 }
+TYPED_TEST(R2CTest, UnaryCallsWithDstType) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestUnaryTransformExplicitDstType();
+}
 
 TYPED_TEST_SUITE(C2RTest, C2ROptionTests);
 TYPED_TEST(C2RTest, BinaryCalls) {
@@ -101,6 +111,11 @@ TYPED_TEST(C2RTest, UnaryCallsWithCompiletimeNFFT) {
   std::cout << TypeParam::name();
   this->GenerateTestdata();
   this->TestUnaryTransformExplicitCompileTimeNFFT();
+}
+TYPED_TEST(C2RTest, UnaryCallsWithDstType) {
+  std::cout << TypeParam::name();
+  this->GenerateTestdata();
+  this->TestUnaryTransformExplicitDstType();
 }
 
 int main(int argc, char **argv) {

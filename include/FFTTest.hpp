@@ -41,6 +41,7 @@ class FFTTestBase : public testing::Test {
   virtual void TestUnaryTransform() = 0;
   virtual void TestUnaryTransform(Eigen::Index nfft0, Eigen::Index nfft1) = 0;
   virtual void TestUnaryTransformExplicitCompileTimeNFFT() = 0;
+  virtual void TestUnaryTransformExplicitDstType() = 0;
 
   virtual void TestAgainstOracle(DstMatrixType& dst, SrcMatrixType& src, size_t nfft0, size_t nfft1) = 0;
 
@@ -167,16 +168,20 @@ class C2CTest : public FFTTestBase<CallSpec> {
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Forward) {
       if constexpr (CallSpec::Is1D) {
-        fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+        // fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+        fft.template fwd<NFFT0>(dst, src);
       } else {
-        fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+        // fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+        fft.template fwd<NFFT0, NFFT1>(dst, src);
       }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     } else {
       if constexpr (CallSpec::Is1D) {
-        fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+        // fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+        fft.template inv<NFFT0>(dst, src);
       } else {
-        fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+        // fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+        fft.template inv<NFFT0, NFFT1>(dst, src);
       }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     }
@@ -228,16 +233,36 @@ class C2CTest : public FFTTestBase<CallSpec> {
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Forward) {
       if constexpr (CallSpec::Is1D) {
-        dst = fft.template fwd<SrcMatrixType, NFFT0>(src);
+        dst = fft.template fwd<NFFT0>(src);
       } else {
-        dst = fft.template fwd<SrcMatrixType, NFFT0, NFFT1>(src);
+        dst = fft.template fwd<NFFT0, NFFT1>(src);
       }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     } else {
       if constexpr (CallSpec::Is1D) {
-        dst = fft.template inv<SrcMatrixType, NFFT0>(src);
+        dst = fft.template inv<NFFT0>(src);
       } else {
-        dst = fft.template inv<SrcMatrixType, NFFT0, NFFT1>(src);
+        dst = fft.template inv<NFFT0, NFFT1>(src);
+      }
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    }
+  }
+
+  virtual void TestUnaryTransformExplicitDstType() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::Forward) {
+      dst = fft.template fwd<DstMatrixType>(src);
+      TestAgainstOracle(dst, src, src.rows(), src.cols());
+    } else {
+      if constexpr (CallSpec::DstIsDynamic) {
+        if constexpr (CallSpec::Is1D) {
+          dst = fft.template inv<DstMatrixType, NFFT0>(src);
+        } else {
+          dst = fft.template inv<DstMatrixType, NFFT0, NFFT1>(src);
+        }
+      } else {
+        dst = fft.template inv<DstMatrixType>(src);
       }
       TestAgainstOracle(dst, src, src.rows(), src.cols());
     }
@@ -301,9 +326,9 @@ class R2CTest : public FFTTestBase<CallSpec> {
     using namespace Eigen::FFTOption;
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Is1D) {
-      fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      fft.template fwd<NFFT0>(dst, src);
     } else {
-      fft.template fwd<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+      fft.template fwd<NFFT0, NFFT1>(dst, src);
     }
     TestAgainstOracle(dst, src, src.rows(), src.cols());
   }
@@ -330,10 +355,17 @@ class R2CTest : public FFTTestBase<CallSpec> {
     using namespace Eigen::FFTOption;
     Eigen::FFT<Options> fft;
     if constexpr (CallSpec::Is1D) {
-      dst = fft.template fwd<SrcMatrixType, NFFT0>(src);
+      dst = fft.template fwd<NFFT0>(src);
     } else {
-      dst = fft.template fwd<SrcMatrixType, NFFT0, NFFT1>(src);
+      dst = fft.template fwd<NFFT0, NFFT1>(src);
     }
+    TestAgainstOracle(dst, src, src.rows(), src.cols());
+  }
+
+  virtual void TestUnaryTransformExplicitDstType() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    dst = fft.template fwd<DstMatrixType>(src);
     TestAgainstOracle(dst, src, src.rows(), src.cols());
   }
 
@@ -459,9 +491,11 @@ class C2RTest : public FFTTestBase<CallSpec> {
     Eigen::FFT<Options> fft;
 
     if constexpr (CallSpec::Is1D) {
-      fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      // fft.template inv<DstMatrixType, SrcMatrixType, NFFT0>(dst, src);
+      fft.template inv<NFFT0>(dst, src);
     } else {
-      fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+      // fft.template inv<DstMatrixType, SrcMatrixType, NFFT0, NFFT1>(dst, src);
+      fft.template inv<NFFT0, NFFT1>(dst, src);
     }
     TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
   }
@@ -499,11 +533,26 @@ class C2RTest : public FFTTestBase<CallSpec> {
     Eigen::FFT<Options> fft;
 
     if constexpr (CallSpec::Is1D) {
-      dst = fft.template inv<SrcMatrixType, NFFT0>(src);
+      dst = fft.template inv<NFFT0>(src);
     } else {
-      dst = fft.template inv<SrcMatrixType, NFFT0, NFFT1>(src);
+      dst = fft.template inv<NFFT0, NFFT1>(src);
     }
     TestAgainstOracle(dst, src, dst.rows(), dst.cols());  // src rows may be nfft0/2 + 1, hence use dst
+  }
+
+  virtual void TestUnaryTransformExplicitDstType() override final {
+    using namespace Eigen::FFTOption;
+    Eigen::FFT<Options> fft;
+    if constexpr (CallSpec::DstIsDynamic) {
+      if constexpr (CallSpec::Is1D) {
+        dst = fft.template inv<DstMatrixType, NFFT0>(src);
+      } else {
+        dst = fft.template inv<DstMatrixType, NFFT0, NFFT1>(src);
+      }
+    } else {
+      dst = fft.template inv<DstMatrixType>(src);
+    }
+    TestAgainstOracle(dst, src, dst.rows(), dst.cols());
   }
 
   virtual void TestAgainstOracle(DstMatrixType& dst, SrcMatrixType& src, size_t nfft0, size_t nfft1) override final {
