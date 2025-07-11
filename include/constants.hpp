@@ -7,14 +7,10 @@
 constexpr int NFFT0 = 7;
 constexpr int NFFT1 = 4;
 
-constexpr int Options1 = Eigen::FFTOption::Scaled | Eigen::FFTOption::OutPlace | Eigen::FFTOption::FullSpectrum;
-constexpr int Options2 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::OutPlace | Eigen::FFTOption::FullSpectrum;
-constexpr int Options3 = Eigen::FFTOption::Scaled | Eigen::FFTOption::InPlace | Eigen::FFTOption::FullSpectrum;
-constexpr int Options4 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::InPlace | Eigen::FFTOption::FullSpectrum;
-constexpr int Options5 = Eigen::FFTOption::Scaled | Eigen::FFTOption::OutPlace | Eigen::FFTOption::HalfSpectrum;
-constexpr int Options6 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::OutPlace | Eigen::FFTOption::HalfSpectrum;
-constexpr int Options7 = Eigen::FFTOption::Scaled | Eigen::FFTOption::InPlace | Eigen::FFTOption::HalfSpectrum;
-constexpr int Options8 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::InPlace | Eigen::FFTOption::HalfSpectrum;
+constexpr int Options1 = Eigen::FFTOption::Scaled | Eigen::FFTOption::FullSpectrum;
+constexpr int Options2 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::FullSpectrum;
+constexpr int Options3 = Eigen::FFTOption::Scaled | Eigen::FFTOption::HalfSpectrum;
+constexpr int Options4 = Eigen::FFTOption::Unscaled | Eigen::FFTOption::HalfSpectrum;
 
 using EigenStaticVeccd = Eigen::Vector<std::complex<double>, NFFT0>;
 using EigenStaticHalfSpectrumVeccd = Eigen::Vector<std::complex<double>, NFFT0 / 2 + 1>;
