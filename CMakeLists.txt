@@ -35,6 +35,3 @@ target_include_directories(UNITTEST_BASE INTERFACE
 add_executable(run_tests "main.cpp")
 target_link_libraries(run_tests PRIVATE UNITTEST_BASE)
 target_compile_options(run_tests PRIVATE -O0 -g)
-add_executable(sandbox "sandbox.cpp")
-target_compile_options(sandbox PRIVATE -O0 -g)
-target_link_libraries(sandbox PRIVATE UNITTEST_BASE)
